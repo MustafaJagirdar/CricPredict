@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | CricPredict{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <span class="eyebrow">Control Center</span>
+        <h1>Welcome {{ user.username }}.</h1>
+        <p>You are logged in as {{ user.usertype|default:"User" }} and can now access predictions, rankings, and upcoming match intelligence.</p>
+    </div>
+    <div class="action-row">
+        <a href="{% url 'NextMatchInsights' %}" class="button button-primary">Open Next Match Insights</a>
+        <a href="{% url 'Logout' %}" class="button button-secondary">Logout</a>
+    </div>
+</section>
+
+<section class="metric-grid">
+    <article class="metric-card surface">
+        <span class="section-label">Batting Board</span>
+        <h3>Top 15 batters</h3>
+        <p>Form, strike pressure, and scoring impact brought into one ranked table.</p>
+        <div class="action-row">
+            <a href="{% url 'Batsman' %}" class="button button-secondary">View Batting Rankings</a>
+        </div>
+    </article>
+    <article class="metric-card surface">
+        <span class="section-label">Bowling Board</span>
+        <h3>Top 15 bowlers</h3>
+        <p>Wickets, economy, and control are weighted into a stable prediction score.</p>
+        <div class="action-row">
+            <a href="{% url 'Ballers' %}" class="button button-secondary">View Bowling Rankings</a>
+        </div>
+    </article>
+    <article class="metric-card surface">
+        <span class="section-label">Upcoming Fixture</span>
+        <h3>{{ fixture.name }}</h3>
+        <p>{{ fixture.start_time }} | {{ fixture.venue }}</p>
+        <div class="action-row">
+            <a href="{% url 'NextMatchInsights' %}" class="button button-tertiary">View Match Picks</a>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-grid" style="margin-top: 24px;">
+    <article class="fixture-card surface">
+        <div class="section-header">
+            <div>
+                <span class="section-label">Next Match Snapshot</span>
+                <h2>{{ fixture.name }}</h2>
+            </div>
+            <span class="badge">{{ fixture.match_type }}</span>
+        </div>
+        <div class="fixture-meta">
+            <div class="summary-item">
+                <strong>Series</strong>
+                <p>{{ fixture.series }}</p>
+            </div>
+            <div class="summary-item">
+                <strong>Start Time</strong>
+                <p>{{ fixture.start_time }}</p>
+            </div>
+            <div class="summary-item">
+                <strong>Venue</strong>
+                <p>{{ fixture.venue }}</p>
+            </div>
+            <div class="summary-item">
+                <strong>Source</strong>
+                <p>{{ fixture.source }}</p>
+                <p class="detail-text">{{ fixture.note }}</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="recommendation-card surface">
+        <div class="section-header">
+            <div>
+                <span class="section-label">Top Match Picks</span>
+                <h3>Most likely impact players</h3>
+            </div>
+        </div>
+        <div class="stack">
+            {% for player in top_recommendations %}
+            <div class="list-item">
+                <strong>{{ player.name }}</strong>
+                <p>{{ player.team }} | {{ player.role }}</p>
+                <p class="detail-text">{{ player.detail }}</p>
+                <span class="score-chip">{{ player.score }}</span>
+            </div>
+            {% empty %}
+            <div class="list-item">
+                <strong>No recommendations available</strong>
+                <p class="detail-text">Configure the upcoming fixture source or review the player data.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+{% endblock %}

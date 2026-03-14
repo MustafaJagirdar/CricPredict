@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}CricPredict{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <span class="eyebrow">Predictive Cricket Intelligence</span>
+        <h1>Professional match insights, player rankings, and next-match recommendations in one place.</h1>
+        <p>
+            This platform combines historical performance signals, model-backed scoring, and upcoming match context
+            to help coaches, analysts, and fans make faster, sharper decisions.
+        </p>
+        <div class="cta-row">
+            {% if user %}
+            <a href="{% url 'Dashboard' %}" class="button button-primary">Open Dashboard</a>
+            <a href="{% url 'NextMatchInsights' %}" class="button button-secondary">View Next Match Insights</a>
+            {% else %}
+            <a href="{% url 'UserLogin' %}" class="button button-primary">Login</a>
+            <a href="{% url 'Register' %}" class="button button-secondary">Create Account</a>
+            {% endif %}
+        </div>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <strong>15</strong>
+                <span>ranked batters</span>
+            </div>
+            <div class="stat-card">
+                <strong>15</strong>
+                <span>ranked bowlers</span>
+            </div>
+            <div class="stat-card">
+                <strong>1</strong>
+                <span>upcoming match intelligence view</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-panel surface">
+        <div class="panel-header">
+            <span class="panel-title">Platform Capabilities</span>
+            <span class="badge">Live-ready</span>
+        </div>
+        <div class="feature-stack">
+            <article class="feature-item">
+                <h3>Model-backed rankings</h3>
+                <p>Batting and bowling lists are generated from performance form, efficiency, and consistency patterns.</p>
+            </article>
+            <article class="feature-item">
+                <h3>Next-match lens</h3>
+                <p>Upcoming fixture data can be pulled from a cricket API and paired with player recommendation logic.</p>
+            </article>
+            <article class="feature-item">
+                <h3>Clean workflow</h3>
+                <p>Users move from login to dashboard to insights without friction, clutter, or broken screens.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section-grid">
+    <article class="surface info-card">
+        <span class="card-kicker">Batting Intelligence</span>
+        <h2>Top-order signal, strike-rate pressure handling, and boundary impact.</h2>
+        <p>Built for quickly identifying high-upside batters who combine run volume with tempo and reliability.</p>
+    </article>
+    <article class="surface info-card">
+        <span class="card-kicker">Bowling Intelligence</span>
+        <h2>Wickets, economy control, dot-ball pressure, and discipline in one score.</h2>
+        <p>Designed to surface bowlers who can change games rather than simply survive overs.</p>
+    </article>
+    <article class="surface info-card">
+        <span class="card-kicker">Match Planning</span>
+        <h2>See the next fixture and the standout names most likely to influence it.</h2>
+        <p>Useful for previews, squad conversations, fantasy selection, and analytical storytelling.</p>
+    </article>
+</section>
+{% endblock %}

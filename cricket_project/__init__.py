@@ -1,0 +1,1 @@
+# Cricket project package initialization

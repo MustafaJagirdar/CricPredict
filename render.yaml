@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: cricpredict
+    env: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn cricket_project.wsgi:application
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: "True"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "*"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: CRICKETDATA_API_KEY
+        sync: false
+databases:
+  - name: cricpredict-db
+    plan: free

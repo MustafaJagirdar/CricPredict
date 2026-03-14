@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Next Match Insights | CricPredict{% endblock %}
+
+{% block content %}
+<section class="match-layout">
+    <div class="page-header">
+        <div>
+            <span class="eyebrow">Upcoming Fixture Intelligence</span>
+            <h1>{{ fixture.name }}</h1>
+            <p>{{ fixture.series }} | {{ fixture.match_type }} | {{ fixture.status }}</p>
+        </div>
+        <div class="action-row">
+            <a href="{% url 'Dashboard' %}" class="button button-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <section class="insight-grid">
+        <article class="fixture-card surface">
+            <div class="section-header">
+                <div>
+                    <span class="section-label">Fixture Details</span>
+                    <h2>Match context</h2>
+                </div>
+                <span class="badge">{{ fixture.source }}</span>
+            </div>
+            <div class="fixture-meta">
+                <div class="summary-item">
+                    <strong>Teams</strong>
+                    <p>{{ fixture.teams|join:" vs " }}</p>
+                </div>
+                <div class="summary-item">
+                    <strong>Start Time</strong>
+                    <p>{{ fixture.start_time }}</p>
+                </div>
+                <div class="summary-item">
+                    <strong>Venue</strong>
+                    <p>{{ fixture.venue }}</p>
+                </div>
+                <div class="summary-item">
+                    <strong>Series</strong>
+                    <p>{{ fixture.series }}</p>
+                </div>
+                <div class="summary-item">
+                    <strong>API Status</strong>
+                    <p>{{ fixture.note }}</p>
+                    <p class="detail-text">
+                        {% if fixture.source_url %}
+                        Source endpoint: <a href="{{ fixture.source_url }}" class="subtle-link">{{ fixture.source_url }}</a>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <article class="recommendation-card surface">
+            <div class="section-header">
+                <div>
+                    <span class="section-label">Best Overall Picks</span>
+                    <h3>Most likely standout players</h3>
+                </div>
+            </div>
+            <div class="stack">
+                {% for player in top_recommendations %}
+                <div class="list-item">
+                    <strong>{{ player.name }}</strong>
+                    <p>{{ player.team }} | {{ player.role }}</p>
+                    <p class="detail-text">{{ player.detail }}</p>
+                    <span class="score-chip">{{ player.score }}</span>
+                </div>
+                {% empty %}
+                <div class="list-item">
+                    <strong>No match picks available</strong>
+                    <p class="detail-text">Player recommendations will appear here when fixture teams can be matched.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="recommendation-grid">
+        <article class="surface recommendation-card">
+            <div class="section-header">
+                <div>
+                    <span class="section-label">Recommended Batters</span>
+                    <h3>Top batting options for this fixture</h3>
+                </div>
+            </div>
+            <div class="mini-list">
+                {% for player in recommended_batsmen %}
+                <div class="list-item">
+                    <div>
+                        <strong>{{ player.name }}</strong>
+                        <p>{{ player.team }}</p>
+                        <p class="detail-text">{{ player.detail }}</p>
+                    </div>
+                    <span class="score-chip">{{ player.score }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="surface recommendation-card">
+            <div class="section-header">
+                <div>
+                    <span class="section-label">Recommended Bowlers</span>
+                    <h3>Top bowling options for this fixture</h3>
+                </div>
+            </div>
+            <div class="mini-list">
+                {% for player in recommended_bowlers %}
+                <div class="list-item">
+                    <div>
+                        <strong>{{ player.name }}</strong>
+                        <p>{{ player.team }}</p>
+                        <p class="detail-text">{{ player.detail }}</p>
+                    </div>
+                    <span class="score-chip">{{ player.score }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+</section>
+{% endblock %}

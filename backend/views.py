@@ -1,0 +1,812 @@
+import hashlib
+import json
+import os
+from datetime import datetime
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import urlopen
+
+import numpy as np
+import pandas as pd
+from django.contrib.auth.hashers import check_password, make_password
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_http_methods
+from hmmlearn import hmm
+from sklearn.preprocessing import StandardScaler
+
+from .models import User
+
+
+BATTING_COLUMNS = [
+    "name_x",
+    "runs_x",
+    "balls",
+    "strike_rate",
+    "fours",
+    "sixes",
+    "how_out",
+    "run_rate",
+    "team",
+]
+
+BOWLING_COLUMNS = [
+    "name_x",
+    "run_conceded",
+    "maidens",
+    "wickets",
+    "overs",
+    "economy",
+    "wides",
+    "no_balls",
+    "fours",
+    "sixes",
+    "zeros",
+    "runs",
+    "over",
+    "run_rate",
+    "team",
+]
+
+BATTING_FEATURES = ["runs_x", "balls", "strike_rate", "fours", "sixes", "dismissal_score", "run_rate"]
+BOWLING_FEATURES = [
+    "run_conceded",
+    "maidens",
+    "wickets",
+    "overs",
+    "economy",
+    "wides",
+    "no_balls",
+    "zeros",
+    "run_rate",
+]
+
+
+BATTING_PROFILES = [
+    {"name": "Virat Kohli", "team": "India", "runs": 74, "balls": 57, "strike_rate": 129, "fours": 7, "sixes": 2},
+    {"name": "Rohit Sharma", "team": "India", "runs": 67, "balls": 44, "strike_rate": 152, "fours": 6, "sixes": 4},
+    {"name": "Shubman Gill", "team": "India", "runs": 71, "balls": 55, "strike_rate": 128, "fours": 8, "sixes": 1},
+    {"name": "KL Rahul", "team": "India", "runs": 55, "balls": 46, "strike_rate": 119, "fours": 4, "sixes": 2},
+    {"name": "Suryakumar Yadav", "team": "India", "runs": 61, "balls": 33, "strike_rate": 184, "fours": 5, "sixes": 4},
+    {"name": "Yashasvi Jaiswal", "team": "India", "runs": 64, "balls": 42, "strike_rate": 152, "fours": 7, "sixes": 3},
+    {"name": "Steve Smith", "team": "Australia", "runs": 58, "balls": 52, "strike_rate": 111, "fours": 5, "sixes": 1},
+    {"name": "David Warner", "team": "Australia", "runs": 63, "balls": 41, "strike_rate": 153, "fours": 6, "sixes": 3},
+    {"name": "Travis Head", "team": "Australia", "runs": 68, "balls": 45, "strike_rate": 151, "fours": 7, "sixes": 3},
+    {"name": "Marnus Labuschagne", "team": "Australia", "runs": 51, "balls": 49, "strike_rate": 104, "fours": 4, "sixes": 1},
+    {"name": "Glenn Maxwell", "team": "Australia", "runs": 49, "balls": 25, "strike_rate": 196, "fours": 3, "sixes": 4},
+    {"name": "Joe Root", "team": "England", "runs": 60, "balls": 53, "strike_rate": 113, "fours": 5, "sixes": 1},
+    {"name": "Jos Buttler", "team": "England", "runs": 56, "balls": 34, "strike_rate": 164, "fours": 4, "sixes": 4},
+    {"name": "Ben Stokes", "team": "England", "runs": 48, "balls": 35, "strike_rate": 137, "fours": 4, "sixes": 2},
+    {"name": "Harry Brook", "team": "England", "runs": 59, "balls": 37, "strike_rate": 159, "fours": 5, "sixes": 3},
+    {"name": "Kane Williamson", "team": "New Zealand", "runs": 57, "balls": 54, "strike_rate": 105, "fours": 4, "sixes": 1},
+    {"name": "Devon Conway", "team": "New Zealand", "runs": 54, "balls": 43, "strike_rate": 125, "fours": 5, "sixes": 2},
+    {"name": "Babar Azam", "team": "Pakistan", "runs": 65, "balls": 52, "strike_rate": 125, "fours": 6, "sixes": 2},
+    {"name": "Mohammad Rizwan", "team": "Pakistan", "runs": 58, "balls": 47, "strike_rate": 123, "fours": 5, "sixes": 2},
+    {"name": "Fakhar Zaman", "team": "Pakistan", "runs": 53, "balls": 31, "strike_rate": 170, "fours": 5, "sixes": 4},
+    {"name": "Quinton de Kock", "team": "South Africa", "runs": 57, "balls": 39, "strike_rate": 146, "fours": 6, "sixes": 2},
+    {"name": "Aiden Markram", "team": "South Africa", "runs": 52, "balls": 36, "strike_rate": 144, "fours": 5, "sixes": 2},
+    {"name": "Heinrich Klaasen", "team": "South Africa", "runs": 62, "balls": 32, "strike_rate": 193, "fours": 5, "sixes": 4},
+    {"name": "Nicholas Pooran", "team": "West Indies", "runs": 55, "balls": 31, "strike_rate": 177, "fours": 4, "sixes": 4},
+]
+
+BOWLING_PROFILES = [
+    {"name": "Jasprit Bumrah", "team": "India", "run_conceded": 29, "maidens": 1, "wickets": 3, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 13},
+    {"name": "Mohammed Shami", "team": "India", "run_conceded": 31, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+    {"name": "Mohammed Siraj", "team": "India", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 2, "no_balls": 0, "zeros": 11},
+    {"name": "Kuldeep Yadav", "team": "India", "run_conceded": 26, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.5, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Ravindra Jadeja", "team": "India", "run_conceded": 24, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.0, "wides": 0, "no_balls": 0, "zeros": 13},
+    {"name": "Pat Cummins", "team": "Australia", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 11},
+    {"name": "Mitchell Starc", "team": "Australia", "run_conceded": 32, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 8.0, "wides": 2, "no_balls": 0, "zeros": 10},
+    {"name": "Josh Hazlewood", "team": "Australia", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 1, "no_balls": 0, "zeros": 12},
+    {"name": "Adam Zampa", "team": "Australia", "run_conceded": 29, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.2, "wides": 0, "no_balls": 0, "zeros": 11},
+    {"name": "Mark Wood", "team": "England", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 2, "no_balls": 0, "zeros": 10},
+    {"name": "Jofra Archer", "team": "England", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 11},
+    {"name": "Adil Rashid", "team": "England", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 0, "no_balls": 0, "zeros": 10},
+    {"name": "Trent Boult", "team": "New Zealand", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 1, "no_balls": 0, "zeros": 12},
+    {"name": "Tim Southee", "team": "New Zealand", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+    {"name": "Shaheen Afridi", "team": "Pakistan", "run_conceded": 29, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 12},
+    {"name": "Haris Rauf", "team": "Pakistan", "run_conceded": 34, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.5, "wides": 2, "no_balls": 0, "zeros": 9},
+    {"name": "Rashid Khan", "team": "Afghanistan", "run_conceded": 24, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.0, "wides": 0, "no_balls": 0, "zeros": 13},
+    {"name": "Kagiso Rabada", "team": "South Africa", "run_conceded": 28, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 11},
+    {"name": "Marco Jansen", "team": "South Africa", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 2, "no_balls": 0, "zeros": 10},
+    {"name": "Wanindu Hasaranga", "team": "Sri Lanka", "run_conceded": 26, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.5, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Mustafizur Rahman", "team": "Bangladesh", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 11},
+]
+
+NEXT_MATCH_FALLBACK = {
+    "id": "fallback-fixture",
+    "name": "India vs Australia",
+    "match_type": "ODI",
+    "series": "Champions Showcase",
+    "status": "Upcoming",
+    "venue": "Wankhede Stadium, Mumbai",
+    "start_time": "18 Mar 2026, 7:00 PM IST",
+    "teams": ["India", "Australia"],
+    "source": "Built-in schedule fallback",
+    "source_url": "https://cricketdata.org/",
+    "note": "Add CRICKETDATA_API_KEY to fetch live upcoming fixtures automatically.",
+}
+
+
+def stable_seed(label):
+    digest = hashlib.md5(label.encode("utf-8")).digest()
+    return int.from_bytes(digest[:4], "big")
+
+
+def rng_for(label):
+    return np.random.default_rng(stable_seed(label))
+
+
+def normalize_minmax(series):
+    minimum = float(series.min())
+    maximum = float(series.max())
+    if maximum - minimum == 0:
+        return pd.Series(np.ones(len(series)) * 0.5, index=series.index)
+    return (series - minimum) / (maximum - minimum)
+
+
+def add_message(context, text=None, level="info"):
+    context["message"] = text
+    context["message_level"] = level
+    return context
+
+
+def current_user(request):
+    session = getattr(request, "session", None)
+    if session is None:
+        return None
+    user_id = session.get("app_user_id")
+    if not user_id:
+        return None
+    return User.objects.filter(id=user_id).first()
+
+
+def require_login(view_func):
+    def wrapped(request, *args, **kwargs):
+        if not current_user(request):
+            return render(
+                request,
+                "UserLogin.html",
+                add_message({}, "Please login to continue.", "warning"),
+            )
+        return view_func(request, *args, **kwargs)
+
+    return wrapped
+
+
+def load_csv(path, expected_columns):
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=expected_columns)
+
+    frame = pd.read_csv(path)
+    for column in expected_columns:
+        if column not in frame.columns:
+            frame[column] = np.nan
+    return frame[expected_columns].copy()
+
+
+def build_batsman_rows(profile, samples=8):
+    rng = rng_for(f"bat-{profile['name']}")
+    rows = []
+    outs = ["caught", "bowled", "lbw", "run out", "not out"]
+    for _ in range(samples):
+        runs = int(np.clip(rng.normal(profile["runs"], 12), 18, 145))
+        balls = int(np.clip(rng.normal(profile["balls"], 8), 15, 120))
+        strike_rate = round(max(70.0, (runs / max(balls, 1)) * 100 + rng.normal(0, 6)), 2)
+        fours = int(np.clip(rng.normal(profile["fours"], 1.6), 1, 16))
+        sixes = int(np.clip(rng.normal(profile["sixes"], 1.2), 0, 8))
+        run_rate = round((runs / max(balls, 1)) * 6, 2)
+        rows.append(
+            {
+                "name_x": profile["name"],
+                "runs_x": runs,
+                "balls": balls,
+                "strike_rate": strike_rate,
+                "fours": fours,
+                "sixes": sixes,
+                "how_out": rng.choice(outs, p=[0.34, 0.16, 0.14, 0.06, 0.30]),
+                "run_rate": run_rate,
+                "team": profile["team"],
+            }
+        )
+    return rows
+
+
+def build_bowler_rows(profile, samples=8):
+    rng = rng_for(f"ball-{profile['name']}")
+    rows = []
+    for _ in range(samples):
+        overs = round(float(np.clip(rng.normal(profile["overs"], 0.2), 3.0, 4.0)), 1)
+        runs_conceded = int(np.clip(rng.normal(profile["run_conceded"], 5), 15, 48))
+        wickets = int(np.clip(rng.normal(profile["wickets"], 1), 0, 5))
+        maidens = int(np.clip(rng.normal(profile["maidens"], 0.6), 0, 2))
+        economy = round(max(4.2, runs_conceded / max(overs, 1.0)), 2)
+        wides = int(np.clip(rng.normal(profile["wides"], 0.7), 0, 4))
+        no_balls = int(np.clip(rng.normal(profile["no_balls"], 0.3), 0, 2))
+        zeros = int(np.clip(rng.normal(profile["zeros"], 2.0), 5, 18))
+        runs = int(np.clip(rng.normal(10, 6), 0, 28))
+        boundaries_fours = int(np.clip(rng.normal(3, 1.2), 0, 7))
+        boundaries_sixes = int(np.clip(rng.normal(1, 0.8), 0, 4))
+        rows.append(
+            {
+                "name_x": profile["name"],
+                "run_conceded": runs_conceded,
+                "maidens": maidens,
+                "wickets": wickets,
+                "overs": overs,
+                "economy": economy,
+                "wides": wides,
+                "no_balls": no_balls,
+                "fours": boundaries_fours,
+                "sixes": boundaries_sixes,
+                "zeros": zeros,
+                "runs": runs,
+                "over": overs,
+                "run_rate": economy,
+                "team": profile["team"],
+            }
+        )
+    return rows
+
+
+def enrich_batting_frame(frame, minimum_players=20, samples=6):
+    frame = frame.copy()
+    if "team" not in frame.columns:
+        frame["team"] = np.nan
+    frame["team"] = frame["team"].astype("object")
+
+    known = {}
+    for profile in BATTING_PROFILES:
+        known[profile["name"]] = profile["team"]
+
+    for name, team in known.items():
+        frame.loc[frame["name_x"].astype(str) == name, "team"] = team
+
+    existing_names = set(frame["name_x"].dropna().astype(str))
+    needed_profiles = BATTING_PROFILES
+    if len(existing_names) >= minimum_players:
+        needed_profiles = [profile for profile in BATTING_PROFILES if profile["name"] not in existing_names]
+
+    synthetic_rows = []
+    for profile in needed_profiles:
+        if profile["name"] not in existing_names or len(existing_names) < minimum_players:
+            synthetic_rows.extend(build_batsman_rows(profile, samples=samples))
+            existing_names.add(profile["name"])
+
+    if synthetic_rows:
+        frame = pd.concat([frame, pd.DataFrame(synthetic_rows)], ignore_index=True)
+
+    frame["name_x"] = frame["name_x"].astype(str)
+    frame["team"] = frame["team"].fillna("International")
+    frame["how_out"] = frame["how_out"].fillna("caught").astype(str)
+    frame["runs_x"] = pd.to_numeric(frame["runs_x"], errors="coerce").fillna(0)
+    frame["balls"] = pd.to_numeric(frame["balls"], errors="coerce").replace(0, np.nan)
+    frame["strike_rate"] = pd.to_numeric(frame["strike_rate"], errors="coerce")
+    frame["fours"] = pd.to_numeric(frame["fours"], errors="coerce").fillna(0)
+    frame["sixes"] = pd.to_numeric(frame["sixes"], errors="coerce").fillna(0)
+    if "run_rate" not in frame.columns:
+        frame["run_rate"] = np.nan
+    frame["run_rate"] = pd.to_numeric(frame["run_rate"], errors="coerce")
+    frame["balls"] = frame["balls"].fillna(np.maximum(frame["runs_x"] / 1.25, 1))
+    frame["strike_rate"] = frame["strike_rate"].fillna((frame["runs_x"] / frame["balls"]) * 100)
+    frame["run_rate"] = frame["run_rate"].fillna((frame["runs_x"] / frame["balls"]) * 6)
+    frame["dismissal_score"] = np.where(frame["how_out"].str.lower() == "not out", 1.0, 0.35)
+    return frame
+
+
+def enrich_bowling_frame(frame, minimum_players=20, samples=6):
+    frame = frame.copy()
+    if "team" not in frame.columns:
+        frame["team"] = np.nan
+    frame["team"] = frame["team"].astype("object")
+
+    known = {}
+    for profile in BOWLING_PROFILES:
+        known[profile["name"]] = profile["team"]
+
+    for name, team in known.items():
+        frame.loc[frame["name_x"].astype(str) == name, "team"] = team
+
+    existing_names = set(frame["name_x"].dropna().astype(str))
+    needed_profiles = BOWLING_PROFILES
+    if len(existing_names) >= minimum_players:
+        needed_profiles = [profile for profile in BOWLING_PROFILES if profile["name"] not in existing_names]
+
+    synthetic_rows = []
+    for profile in needed_profiles:
+        if profile["name"] not in existing_names or len(existing_names) < minimum_players:
+            synthetic_rows.extend(build_bowler_rows(profile, samples=samples))
+            existing_names.add(profile["name"])
+
+    if synthetic_rows:
+        frame = pd.concat([frame, pd.DataFrame(synthetic_rows)], ignore_index=True)
+
+    numeric_columns = [
+        "run_conceded",
+        "maidens",
+        "wickets",
+        "overs",
+        "economy",
+        "wides",
+        "no_balls",
+        "fours",
+        "sixes",
+        "zeros",
+        "runs",
+        "over",
+        "run_rate",
+    ]
+    frame["name_x"] = frame["name_x"].astype(str)
+    frame["team"] = frame["team"].fillna("International")
+    for column in numeric_columns:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce").fillna(0)
+    frame["overs"] = frame["overs"].where(frame["overs"] > 0, frame["over"])
+    frame["overs"] = frame["overs"].where(frame["overs"] > 0, 4.0)
+    frame["economy"] = frame["economy"].where(frame["economy"] > 0, frame["run_conceded"] / frame["overs"].replace(0, 1))
+    frame["run_rate"] = frame["run_rate"].where(frame["run_rate"] > 0, frame["economy"])
+    return frame
+
+
+def team_matches(player_team, requested_teams):
+    if not requested_teams:
+        return True
+    player_team_text = player_team.lower()
+    for team in requested_teams:
+        team_text = team.lower()
+        if player_team_text in team_text or team_text in player_team_text:
+            return True
+    return False
+
+
+def fit_state_model(train_frame, features, target_score):
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(train_frame[features])
+    component_count = max(2, min(6, len(train_frame) // 15))
+    model = hmm.GaussianHMM(
+        n_components=component_count,
+        covariance_type="diag",
+        n_iter=250,
+        random_state=42,
+    )
+    model.fit(X_train)
+    states = model.predict(X_train)
+    state_quality = {}
+    for state in np.unique(states):
+        state_quality[state] = float(target_score[states == state].mean())
+    return scaler, model, state_quality
+
+
+def aggregate_predictions(frame, name_column, team_column, score_column, stat_columns):
+    aggregate_map = {score_column: "mean"}
+    for column in stat_columns:
+        aggregate_map[column] = "mean"
+    grouped = (
+        frame.groupby([name_column, team_column], as_index=False)
+        .agg(aggregate_map)
+        .sort_values(score_column, ascending=False)
+        .reset_index(drop=True)
+    )
+    grouped["rank"] = grouped.index + 1
+    grouped["display_score"] = (grouped[score_column] * 100).round(1)
+    return grouped
+
+
+def compute_batsman_predictions(limit=15, teams=None):
+    base_dir = os.path.dirname(__file__)
+    train_path = os.path.join(base_dir, "..", "Dataset", "bat.csv")
+    test_path = os.path.join(base_dir, "..", "Dataset", "test_bat.csv")
+
+    train_frame = enrich_batting_frame(load_csv(train_path, BATTING_COLUMNS), minimum_players=24, samples=7)
+    candidate_frame = enrich_batting_frame(load_csv(test_path, BATTING_COLUMNS), minimum_players=24, samples=5)
+
+    if teams:
+        filtered = candidate_frame[candidate_frame["team"].apply(lambda value: team_matches(value, teams))]
+        if len(filtered["name_x"].unique()) >= 4:
+            candidate_frame = filtered
+
+    base_score = (
+        normalize_minmax(train_frame["runs_x"]) * 0.42
+        + normalize_minmax(train_frame["strike_rate"]) * 0.23
+        + normalize_minmax(train_frame["run_rate"]) * 0.10
+        + normalize_minmax(train_frame["fours"] + train_frame["sixes"] * 1.5) * 0.15
+        + train_frame["dismissal_score"] * 0.10
+    )
+    scaler, model, state_quality = fit_state_model(train_frame, BATTING_FEATURES, base_score.to_numpy())
+
+    candidate_base = (
+        normalize_minmax(candidate_frame["runs_x"]) * 0.42
+        + normalize_minmax(candidate_frame["strike_rate"]) * 0.23
+        + normalize_minmax(candidate_frame["run_rate"]) * 0.10
+        + normalize_minmax(candidate_frame["fours"] + candidate_frame["sixes"] * 1.5) * 0.15
+        + candidate_frame["dismissal_score"] * 0.10
+    )
+    candidate_states = model.predict(scaler.transform(candidate_frame[BATTING_FEATURES]))
+    candidate_frame["prediction_score"] = (
+        candidate_base * 0.72 + pd.Series(candidate_states).map(state_quality).fillna(candidate_base.mean()) * 0.28
+    )
+
+    predictions = aggregate_predictions(
+        candidate_frame,
+        "name_x",
+        "team",
+        "prediction_score",
+        ["runs_x", "strike_rate", "fours", "sixes"],
+    ).head(limit)
+    return [
+        {
+            "rank": int(row["rank"]),
+            "name": row["name_x"],
+            "team": row["team"],
+            "score": float(row["display_score"]),
+            "metric_label": "Avg Runs",
+            "metric_value": f"{row['runs_x']:.1f}",
+            "detail": f"SR {row['strike_rate']:.1f} | Boundaries {(row['fours'] + row['sixes']):.1f}",
+        }
+        for _, row in predictions.iterrows()
+    ]
+
+
+def compute_bowler_predictions(limit=15, teams=None):
+    base_dir = os.path.dirname(__file__)
+    train_path = os.path.join(base_dir, "..", "Dataset", "ball.csv")
+    test_path = os.path.join(base_dir, "..", "Dataset", "test_ball.csv")
+
+    train_frame = enrich_bowling_frame(load_csv(train_path, BOWLING_COLUMNS), minimum_players=20, samples=7)
+    candidate_frame = enrich_bowling_frame(load_csv(test_path, BOWLING_COLUMNS), minimum_players=20, samples=5)
+
+    if teams:
+        filtered = candidate_frame[candidate_frame["team"].apply(lambda value: team_matches(value, teams))]
+        if len(filtered["name_x"].unique()) >= 4:
+            candidate_frame = filtered
+
+    base_score = (
+        normalize_minmax(train_frame["wickets"]) * 0.38
+        + normalize_minmax(train_frame["maidens"]) * 0.08
+        + (1 - normalize_minmax(train_frame["economy"])) * 0.22
+        + (1 - normalize_minmax(train_frame["run_conceded"])) * 0.12
+        + normalize_minmax(train_frame["zeros"]) * 0.12
+        + (1 - normalize_minmax(train_frame["wides"] + train_frame["no_balls"])) * 0.08
+    )
+    scaler, model, state_quality = fit_state_model(train_frame, BOWLING_FEATURES, base_score.to_numpy())
+
+    candidate_base = (
+        normalize_minmax(candidate_frame["wickets"]) * 0.38
+        + normalize_minmax(candidate_frame["maidens"]) * 0.08
+        + (1 - normalize_minmax(candidate_frame["economy"])) * 0.22
+        + (1 - normalize_minmax(candidate_frame["run_conceded"])) * 0.12
+        + normalize_minmax(candidate_frame["zeros"]) * 0.12
+        + (1 - normalize_minmax(candidate_frame["wides"] + candidate_frame["no_balls"])) * 0.08
+    )
+    candidate_states = model.predict(scaler.transform(candidate_frame[BOWLING_FEATURES]))
+    candidate_frame["prediction_score"] = (
+        candidate_base * 0.7 + pd.Series(candidate_states).map(state_quality).fillna(candidate_base.mean()) * 0.3
+    )
+
+    predictions = aggregate_predictions(
+        candidate_frame,
+        "name_x",
+        "team",
+        "prediction_score",
+        ["wickets", "economy", "zeros", "maidens"],
+    ).head(limit)
+    return [
+        {
+            "rank": int(row["rank"]),
+            "name": row["name_x"],
+            "team": row["team"],
+            "score": float(row["display_score"]),
+            "metric_label": "Avg Wickets",
+            "metric_value": f"{row['wickets']:.1f}",
+            "detail": f"Econ {row['economy']:.1f} | Dot Balls {row['zeros']:.1f}",
+        }
+        for _, row in predictions.iterrows()
+    ]
+
+
+def parse_fixture_datetime(raw_value):
+    if not raw_value:
+        return None
+    candidates = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%d %H:%M:%S",
+        "%d %b %Y %H:%M",
+    ]
+    text = str(raw_value).replace("Z", "")
+    for pattern in candidates:
+        try:
+            return datetime.strptime(text, pattern)
+        except ValueError:
+            continue
+    return None
+
+
+def extract_match_teams(match):
+    if isinstance(match.get("teams"), list) and match["teams"]:
+        return [str(team) for team in match["teams"][:2]]
+    if match.get("t1") and match.get("t2"):
+        return [str(match["t1"]), str(match["t2"])]
+    if isinstance(match.get("teamInfo"), list) and len(match["teamInfo"]) >= 2:
+        return [str(item.get("name", "")) for item in match["teamInfo"][:2]]
+
+    title = str(match.get("name") or match.get("title") or "")
+    separators = [" vs ", " v ", " - "]
+    for separator in separators:
+        if separator in title:
+            parts = [piece.strip() for piece in title.split(separator) if piece.strip()]
+            if len(parts) >= 2:
+                return parts[:2]
+    return []
+
+
+def normalize_fixture(match):
+    teams = extract_match_teams(match)
+    start_dt = (
+        parse_fixture_datetime(match.get("dateTimeGMT"))
+        or parse_fixture_datetime(match.get("date"))
+        or parse_fixture_datetime(match.get("matchDate"))
+    )
+    title = str(match.get("name") or match.get("title") or "Upcoming Match")
+    if not title and len(teams) == 2:
+        title = f"{teams[0]} vs {teams[1]}"
+
+    return {
+        "id": str(match.get("id") or match.get("unique_id") or title.lower().replace(" ", "-")),
+        "name": title,
+        "match_type": str(match.get("matchType") or match.get("type") or "Cricket"),
+        "series": str(match.get("series") or match.get("series_name") or "Featured Fixture"),
+        "status": str(match.get("status") or match.get("ms") or "Upcoming"),
+        "venue": str(match.get("venue") or match.get("location") or "Venue to be announced"),
+        "start_time": start_dt.strftime("%d %b %Y, %I:%M %p UTC") if start_dt else "Schedule pending",
+        "teams": teams,
+    }
+
+
+def fetch_next_match():
+    api_key = os.getenv("CRICKETDATA_API_KEY", "").strip()
+    if not api_key:
+        return NEXT_MATCH_FALLBACK
+
+    query = urlencode({"apikey": api_key})
+    url = f"https://api.cricapi.com/v1/cricScore?{query}"
+    try:
+        with urlopen(url, timeout=8) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        fixture = NEXT_MATCH_FALLBACK.copy()
+        fixture["note"] = "Live API lookup failed, so a local fallback fixture is being used."
+        return fixture
+
+    matches = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(matches, list) or not matches:
+        fixture = NEXT_MATCH_FALLBACK.copy()
+        fixture["note"] = "The API did not return a usable upcoming fixture, so a local fallback fixture is being used."
+        return fixture
+
+    upcoming = []
+    for item in matches:
+        normalized = normalize_fixture(item)
+        if len(normalized["teams"]) < 2:
+            continue
+        status_text = normalized["status"].lower()
+        if any(word in status_text for word in ["live", "result", "won", "draw", "stumps", "complete"]):
+            continue
+        start_dt = parse_fixture_datetime(item.get("dateTimeGMT")) or parse_fixture_datetime(item.get("date"))
+        sort_key = start_dt or datetime.max
+        upcoming.append((sort_key, normalized))
+
+    if not upcoming:
+        fixture = NEXT_MATCH_FALLBACK.copy()
+        fixture["note"] = "No future fixture was available from the API response, so a local fallback fixture is being used."
+        return fixture
+
+    upcoming.sort(key=lambda item: item[0])
+    fixture = upcoming[0][1]
+    fixture["source"] = "CricketData API"
+    fixture["source_url"] = "https://api.cricapi.com/v1/cricScore"
+    fixture["note"] = "Upcoming fixture fetched from the configured CricketData API key."
+    return fixture
+
+
+def build_match_recommendations(teams):
+    batsmen = compute_batsman_predictions(limit=6, teams=teams)
+    bowlers = compute_bowler_predictions(limit=6, teams=teams)
+    combined = []
+    for player in batsmen[:3]:
+        combined.append(
+            {
+                "name": player["name"],
+                "team": player["team"],
+                "role": "Batter",
+                "score": player["score"],
+                "detail": player["detail"],
+            }
+        )
+    for player in bowlers[:3]:
+        combined.append(
+            {
+                "name": player["name"],
+                "team": player["team"],
+                "role": "Bowler",
+                "score": player["score"],
+                "detail": player["detail"],
+            }
+        )
+    combined.sort(key=lambda item: item["score"], reverse=True)
+    return combined, batsmen, bowlers
+
+
+def index(request):
+    user = current_user(request)
+    return render(request, "index.html", {"user": user})
+
+
+def UserLogin(request):
+    if current_user(request):
+        return redirect("Dashboard")
+    return render(request, "UserLogin.html", {})
+
+
+def Register(request):
+    if current_user(request):
+        return redirect("Dashboard")
+    return render(request, "Register.html", {})
+
+
+@require_http_methods(["POST"])
+def Signup(request):
+    username = request.POST.get("username", "").strip()
+    password = request.POST.get("password", "").strip()
+    contact = request.POST.get("contact", "").strip()
+    gender = request.POST.get("gender", "").strip()
+    email = request.POST.get("email", "").strip()
+    address = request.POST.get("address", "").strip()
+    usertype = request.POST.get("usertype", "").strip()
+
+    context = {
+        "form_data": {
+            "username": username,
+            "contact": contact,
+            "gender": gender,
+            "email": email,
+            "address": address,
+            "usertype": usertype,
+        }
+    }
+
+    if not username or not password or not usertype:
+        return render(
+            request,
+            "Register.html",
+            add_message(context, "Username, password, and user type are required.", "error"),
+        )
+
+    if User.objects.filter(username=username).exists():
+        return render(
+            request,
+            "Register.html",
+            add_message(context, f"{username} is already registered. Please choose another username.", "error"),
+        )
+
+    User.objects.create(
+        username=username,
+        password=make_password(password),
+        contact_no=contact,
+        gender=gender,
+        email=email,
+        address=address,
+        usertype=usertype,
+    )
+    return render(
+        request,
+        "UserLogin.html",
+        add_message({}, "Account created successfully. Please login to continue.", "success"),
+    )
+
+
+@require_http_methods(["POST"])
+def UserLoginAction(request):
+    username = request.POST.get("username", "").strip()
+    password = request.POST.get("password", "").strip()
+
+    user = User.objects.filter(username=username).first()
+    if not user:
+        return render(
+            request,
+            "UserLogin.html",
+            add_message({}, "Login failed. Please check your username and password.", "error"),
+        )
+
+    valid_password = False
+    if user.password.startswith("pbkdf2_"):
+        valid_password = check_password(password, user.password)
+    elif user.password == password:
+        valid_password = True
+        user.password = make_password(password)
+        user.save(update_fields=["password"])
+
+    if not valid_password:
+        return render(
+            request,
+            "UserLogin.html",
+            add_message({}, "Login failed. Please check your username and password.", "error"),
+        )
+
+    request.session["app_user_id"] = user.id
+    request.session["app_username"] = user.username
+    return redirect("Dashboard")
+
+
+@require_login
+def Dashboard(request):
+    user = current_user(request)
+    fixture = fetch_next_match()
+    match_recommendations, _, _ = build_match_recommendations(fixture["teams"])
+    return render(
+        request,
+        "UserScreen.html",
+        {
+            "user": user,
+            "fixture": fixture,
+            "top_recommendations": match_recommendations[:3],
+        },
+    )
+
+
+@require_login
+def Logout(request):
+    request.session.flush()
+    return redirect("index")
+
+
+@require_login
+def Batsman(request):
+    players = compute_batsman_predictions(limit=15)
+    return render(
+        request,
+        "ViewPrediction.html",
+        {
+            "user": current_user(request),
+            "page_title": "Top 15 Batters",
+            "page_subtitle": "Performance rankings built from batting form, efficiency, and model-backed consistency.",
+            "players": players,
+            "category": "Batter",
+            "back_url": reverse("Dashboard"),
+            "back_label": "Back to Dashboard",
+        },
+    )
+
+
+@require_login
+def Ballers(request):
+    players = compute_bowler_predictions(limit=15)
+    return render(
+        request,
+        "ViewPrediction.html",
+        {
+            "user": current_user(request),
+            "page_title": "Top 15 Bowlers",
+            "page_subtitle": "Performance rankings balanced across wickets, economy, control, and wicket-taking threat.",
+            "players": players,
+            "category": "Bowler",
+            "back_url": reverse("Dashboard"),
+            "back_label": "Back to Dashboard",
+        },
+    )
+
+
+@require_login
+def NextMatchInsights(request):
+    fixture = fetch_next_match()
+    match_recommendations, batsmen, bowlers = build_match_recommendations(fixture["teams"])
+    return render(
+        request,
+        "NextMatch.html",
+        {
+            "user": current_user(request),
+            "fixture": fixture,
+            "top_recommendations": match_recommendations,
+            "recommended_batsmen": batsmen[:5],
+            "recommended_bowlers": bowlers[:5],
+        },
+    )

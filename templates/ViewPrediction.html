@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | CricPredict{% endblock %}
+
+{% block content %}
+<section class="prediction-shell surface">
+    <div class="page-header" style="margin-bottom: 0;">
+        <div>
+            <span class="eyebrow">{{ category }} Rankings</span>
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+        <div class="action-row">
+            <a href="{{ back_url }}" class="button button-secondary">{{ back_label }}</a>
+        </div>
+    </div>
+</section>
+
+<section class="table-shell surface" style="margin-top: 24px;">
+    <div class="table-header">
+        <div>
+            <span class="section-label">Prediction Table</span>
+            <h2>Ranked player output</h2>
+        </div>
+        <span class="badge">{{ players|length }} players</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Predicted Score</th>
+                <th>Key Metric</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td><span class="rank-pill">{{ player.rank }}</span></td>
+                <td>
+                    <strong>{{ player.name }}</strong><br>
+                    <span class="detail-text">{{ player.detail }}</span>
+                </td>
+                <td>{{ player.team }}</td>
+                <td><span class="score-chip">{{ player.score }}</span></td>
+                <td>{{ player.metric_label }}: {{ player.metric_value }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No players available for this ranking right now.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

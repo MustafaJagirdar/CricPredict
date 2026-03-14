@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Register | CricPredict{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <section class="auth-card surface">
+        <span class="eyebrow">Create Access</span>
+        <h1>Set up your cricket intelligence workspace account.</h1>
+        <p class="metric-subtext">Register once and use the dashboard for rankings, fixtures, and predicted standouts.</p>
+
+        {% if message %}
+        <div class="message {{ message_level }}">{{ message }}</div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'Signup' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="{{ form_data.username|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact">Contact Number</label>
+                    <input type="text" id="contact" name="contact" value="{{ form_data.contact|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender">
+                        <option value="">Select</option>
+                        <option value="Male" {% if form_data.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if form_data.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if form_data.gender == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ form_data.email|default:'' }}">
+                </div>
+                <div class="form-group full">
+                    <label for="address">Address</label>
+                    <textarea id="address" name="address">{{ form_data.address|default:'' }}</textarea>
+                </div>
+                <div class="form-group full">
+                    <label for="usertype">User Type</label>
+                    <select id="usertype" name="usertype" required>
+                        <option value="">Select Type</option>
+                        <option value="Coach" {% if form_data.usertype == 'Coach' %}selected{% endif %}>Coach</option>
+                        <option value="Captain" {% if form_data.usertype == 'Captain' %}selected{% endif %}>Captain</option>
+                        <option value="Analyst" {% if form_data.usertype == 'Analyst' %}selected{% endif %}>Analyst</option>
+                        <option value="Fan" {% if form_data.usertype == 'Fan' %}selected{% endif %}>Fan</option>
+                    </select>
+                </div>
+            </div>
+            <div class="action-row">
+                <button type="submit" class="button button-primary">Register</button>
+                <a href="{% url 'UserLogin' %}" class="button button-secondary">Back to Login</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
