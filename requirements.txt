@@ -1,4 +1,4 @@
-Django==6.0.3
+Django==5.2.12
 dj-database-url==2.2.0
 gunicorn==23.0.0
 pymysql==1.1.0
