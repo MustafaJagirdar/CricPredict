@@ -59,7 +59,7 @@
             <div class="section-header">
                 <div>
                     <span class="section-label">Best Overall Picks</span>
-                    <h3>Most likely standout players</h3>
+                    <h3>Top 10 most likely standout players</h3>
                 </div>
             </div>
             <div class="stack">
@@ -68,7 +68,7 @@
                     <strong>{{ player.name }}</strong>
                     <p>{{ player.team }} | {{ player.role }}</p>
                     <p class="detail-text">{{ player.detail }}</p>
-                    <span class="score-chip">{{ player.score }}</span>
+                    <span class="score-chip">{{ player.score }} pts</span>
                 </div>
                 {% empty %}
                 <div class="list-item">
@@ -85,18 +85,18 @@
             <div class="section-header">
                 <div>
                     <span class="section-label">Recommended Batters</span>
-                    <h3>Top batting options for this fixture</h3>
+                    <h3>Top 10 batting options for this fixture</h3>
                 </div>
             </div>
             <div class="mini-list">
                 {% for player in recommended_batsmen %}
                 <div class="list-item">
                     <div>
-                        <strong>{{ player.name }}</strong>
+                        <strong>#{{ player.rank }} {{ player.name }}</strong>
                         <p>{{ player.team }}</p>
                         <p class="detail-text">{{ player.detail }}</p>
                     </div>
-                    <span class="score-chip">{{ player.score }}</span>
+                    <span class="score-chip">{{ player.score }} pts</span>
                 </div>
                 {% endfor %}
             </div>
@@ -106,18 +106,18 @@
             <div class="section-header">
                 <div>
                     <span class="section-label">Recommended Bowlers</span>
-                    <h3>Top bowling options for this fixture</h3>
+                    <h3>Top 10 bowling options for this fixture</h3>
                 </div>
             </div>
             <div class="mini-list">
                 {% for player in recommended_bowlers %}
                 <div class="list-item">
                     <div>
-                        <strong>{{ player.name }}</strong>
+                        <strong>#{{ player.rank }} {{ player.name }}</strong>
                         <p>{{ player.team }}</p>
                         <p class="detail-text">{{ player.detail }}</p>
                     </div>
-                    <span class="score-chip">{{ player.score }}</span>
+                    <span class="score-chip">{{ player.score }} pts</span>
                 </div>
                 {% endfor %}
             </div>

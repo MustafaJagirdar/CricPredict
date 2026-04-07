@@ -15,6 +15,7 @@
 
         <form method="POST" action="{% url 'UserLoginAction' %}">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required>

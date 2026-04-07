@@ -30,7 +30,7 @@
                 <th>Rank</th>
                 <th>Player</th>
                 <th>Team</th>
-                <th>Predicted Score</th>
+                <th>Predicted Points</th>
                 <th>Key Metric</th>
             </tr>
         </thead>
@@ -43,7 +43,7 @@
                     <span class="detail-text">{{ player.detail }}</span>
                 </td>
                 <td>{{ player.team }}</td>
-                <td><span class="score-chip">{{ player.score }}</span></td>
+                <td><span class="score-chip">{{ player.score }} pts</span></td>
                 <td>{{ player.metric_label }}: {{ player.metric_value }}</td>
             </tr>
             {% empty %}

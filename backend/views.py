@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+from functools import wraps
 from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -160,6 +161,76 @@ IPL_BOWLING_PROFILES = [
     {"name": "Kagiso Rabada", "team": "Punjab Kings", "run_conceded": 29, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 11},
 ]
 
+IPL_BATTING_PROFILES.extend(
+    [
+        {"name": "Phil Salt", "team": "Royal Challengers Bengaluru", "runs": 46, "balls": 27, "strike_rate": 170, "fours": 5, "sixes": 3},
+        {"name": "Liam Livingstone", "team": "Royal Challengers Bengaluru", "runs": 39, "balls": 22, "strike_rate": 177, "fours": 3, "sixes": 4},
+        {"name": "Jitesh Sharma", "team": "Royal Challengers Bengaluru", "runs": 34, "balls": 21, "strike_rate": 162, "fours": 3, "sixes": 3},
+        {"name": "Tilak Varma", "team": "Mumbai Indians", "runs": 49, "balls": 32, "strike_rate": 153, "fours": 5, "sixes": 2},
+        {"name": "Hardik Pandya", "team": "Mumbai Indians", "runs": 38, "balls": 23, "strike_rate": 165, "fours": 3, "sixes": 3},
+        {"name": "Naman Dhir", "team": "Mumbai Indians", "runs": 36, "balls": 24, "strike_rate": 150, "fours": 4, "sixes": 2},
+        {"name": "Devon Conway", "team": "Chennai Super Kings", "runs": 52, "balls": 39, "strike_rate": 133, "fours": 5, "sixes": 2},
+        {"name": "Ravindra Jadeja", "team": "Chennai Super Kings", "runs": 35, "balls": 23, "strike_rate": 152, "fours": 3, "sixes": 2},
+        {"name": "MS Dhoni", "team": "Chennai Super Kings", "runs": 29, "balls": 16, "strike_rate": 181, "fours": 2, "sixes": 3},
+        {"name": "Sunil Narine", "team": "Kolkata Knight Riders", "runs": 43, "balls": 24, "strike_rate": 179, "fours": 4, "sixes": 4},
+        {"name": "Andre Russell", "team": "Kolkata Knight Riders", "runs": 41, "balls": 20, "strike_rate": 205, "fours": 3, "sixes": 5},
+        {"name": "Venkatesh Iyer", "team": "Kolkata Knight Riders", "runs": 47, "balls": 33, "strike_rate": 142, "fours": 5, "sixes": 2},
+        {"name": "Heinrich Klaasen", "team": "Sunrisers Hyderabad", "runs": 56, "balls": 28, "strike_rate": 200, "fours": 4, "sixes": 5},
+        {"name": "Nitish Kumar Reddy", "team": "Sunrisers Hyderabad", "runs": 42, "balls": 27, "strike_rate": 156, "fours": 4, "sixes": 3},
+        {"name": "Ishan Kishan", "team": "Sunrisers Hyderabad", "runs": 45, "balls": 29, "strike_rate": 155, "fours": 5, "sixes": 2},
+        {"name": "Riyan Parag", "team": "Rajasthan Royals", "runs": 50, "balls": 32, "strike_rate": 156, "fours": 5, "sixes": 3},
+        {"name": "Shimron Hetmyer", "team": "Rajasthan Royals", "runs": 38, "balls": 22, "strike_rate": 173, "fours": 3, "sixes": 4},
+        {"name": "Dhruv Jurel", "team": "Rajasthan Royals", "runs": 35, "balls": 24, "strike_rate": 146, "fours": 3, "sixes": 2},
+        {"name": "Tristan Stubbs", "team": "Delhi Capitals", "runs": 44, "balls": 27, "strike_rate": 163, "fours": 4, "sixes": 3},
+        {"name": "Abishek Porel", "team": "Delhi Capitals", "runs": 40, "balls": 28, "strike_rate": 143, "fours": 5, "sixes": 2},
+        {"name": "Axar Patel", "team": "Delhi Capitals", "runs": 37, "balls": 24, "strike_rate": 154, "fours": 3, "sixes": 3},
+        {"name": "Jos Buttler", "team": "Gujarat Titans", "runs": 58, "balls": 36, "strike_rate": 161, "fours": 6, "sixes": 3},
+        {"name": "Rahul Tewatia", "team": "Gujarat Titans", "runs": 36, "balls": 20, "strike_rate": 180, "fours": 3, "sixes": 3},
+        {"name": "Shahrukh Khan", "team": "Gujarat Titans", "runs": 34, "balls": 21, "strike_rate": 162, "fours": 3, "sixes": 3},
+        {"name": "Aiden Markram", "team": "Lucknow Super Giants", "runs": 43, "balls": 31, "strike_rate": 139, "fours": 4, "sixes": 2},
+        {"name": "David Miller", "team": "Lucknow Super Giants", "runs": 41, "balls": 25, "strike_rate": 164, "fours": 3, "sixes": 3},
+        {"name": "Ayush Badoni", "team": "Lucknow Super Giants", "runs": 35, "balls": 24, "strike_rate": 146, "fours": 3, "sixes": 2},
+        {"name": "Shreyas Iyer", "team": "Punjab Kings", "runs": 51, "balls": 37, "strike_rate": 138, "fours": 5, "sixes": 2},
+        {"name": "Glenn Maxwell", "team": "Punjab Kings", "runs": 39, "balls": 22, "strike_rate": 177, "fours": 3, "sixes": 4},
+        {"name": "Marcus Stoinis", "team": "Punjab Kings", "runs": 42, "balls": 26, "strike_rate": 162, "fours": 4, "sixes": 3},
+    ]
+)
+
+IPL_BOWLING_PROFILES.extend(
+    [
+        {"name": "Bhuvneshwar Kumar", "team": "Royal Challengers Bengaluru", "run_conceded": 29, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 11},
+        {"name": "Krunal Pandya", "team": "Royal Challengers Bengaluru", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 0, "no_balls": 0, "zeros": 12},
+        {"name": "Josh Hazlewood", "team": "Royal Challengers Bengaluru", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 12},
+        {"name": "Trent Boult", "team": "Mumbai Indians", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 12},
+        {"name": "Deepak Chahar", "team": "Mumbai Indians", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Hardik Pandya", "team": "Mumbai Indians", "run_conceded": 33, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.2, "wides": 1, "no_balls": 0, "zeros": 9},
+        {"name": "Noor Ahmad", "team": "Chennai Super Kings", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 0, "no_balls": 0, "zeros": 12},
+        {"name": "Khaleel Ahmed", "team": "Chennai Super Kings", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Ravichandran Ashwin", "team": "Chennai Super Kings", "run_conceded": 26, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.5, "wides": 0, "no_balls": 0, "zeros": 12},
+        {"name": "Harshit Rana", "team": "Kolkata Knight Riders", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Andre Russell", "team": "Kolkata Knight Riders", "run_conceded": 32, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.0, "wides": 2, "no_balls": 0, "zeros": 9},
+        {"name": "Anrich Nortje", "team": "Kolkata Knight Riders", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Mohammed Shami", "team": "Sunrisers Hyderabad", "run_conceded": 28, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 12},
+        {"name": "Harshal Patel", "team": "Sunrisers Hyderabad", "run_conceded": 32, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.0, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Adam Zampa", "team": "Sunrisers Hyderabad", "run_conceded": 29, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.2, "wides": 0, "no_balls": 0, "zeros": 11},
+        {"name": "Jofra Archer", "team": "Rajasthan Royals", "run_conceded": 29, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 11},
+        {"name": "Wanindu Hasaranga", "team": "Rajasthan Royals", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 0, "no_balls": 0, "zeros": 12},
+        {"name": "Sandeep Sharma", "team": "Rajasthan Royals", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Mitchell Starc", "team": "Delhi Capitals", "run_conceded": 31, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 11},
+        {"name": "Mukesh Kumar", "team": "Delhi Capitals", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "T Natarajan", "team": "Delhi Capitals", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Mohammed Siraj", "team": "Gujarat Titans", "run_conceded": 29, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 11},
+        {"name": "Prasidh Krishna", "team": "Gujarat Titans", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "R Sai Kishore", "team": "Gujarat Titans", "run_conceded": 26, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.5, "wides": 0, "no_balls": 0, "zeros": 12},
+        {"name": "Avesh Khan", "team": "Lucknow Super Giants", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Shardul Thakur", "team": "Lucknow Super Giants", "run_conceded": 32, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.0, "wides": 1, "no_balls": 0, "zeros": 9},
+        {"name": "Shahbaz Ahmed", "team": "Lucknow Super Giants", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 0, "no_balls": 0, "zeros": 11},
+        {"name": "Yuzvendra Chahal", "team": "Punjab Kings", "run_conceded": 27, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.7, "wides": 0, "no_balls": 0, "zeros": 12},
+        {"name": "Marco Jansen", "team": "Punjab Kings", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+        {"name": "Lockie Ferguson", "team": "Punjab Kings", "run_conceded": 32, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.0, "wides": 1, "no_balls": 0, "zeros": 9},
+    ]
+)
+
 BATTING_PROFILES.extend(IPL_BATTING_PROFILES)
 BOWLING_PROFILES.extend(IPL_BOWLING_PROFILES)
 
@@ -292,6 +363,7 @@ def rng_for(label):
 
 
 def normalize_minmax(series):
+    series = pd.to_numeric(series, errors="coerce").fillna(0)
     minimum = float(series.min())
     maximum = float(series.max())
     if maximum - minimum == 0:
@@ -299,10 +371,40 @@ def normalize_minmax(series):
     return (series - minimum) / (maximum - minimum)
 
 
+def safe_float(value, default=0.0):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    if np.isnan(number) or np.isinf(number):
+        return default
+    return number
+
+
+def top_up_players(primary, fallback, limit):
+    selected = list(primary)
+    seen = {(player["name"], player["team"]) for player in selected}
+    for player in fallback:
+        key = (player["name"], player["team"])
+        if key in seen:
+            continue
+        selected.append(player)
+        seen.add(key)
+        if len(selected) >= limit:
+            break
+    for rank, player in enumerate(selected, start=1):
+        player["rank"] = rank
+    return selected[:limit]
+
+
 def add_message(context, text=None, level="info"):
     context["message"] = text
     context["message_level"] = level
     return context
+
+
+def is_safe_local_path(path):
+    return bool(path) and path.startswith("/") and not path.startswith("//")
 
 
 def current_user(request):
@@ -316,13 +418,11 @@ def current_user(request):
 
 
 def require_login(view_func):
+    @wraps(view_func)
     def wrapped(request, *args, **kwargs):
         if not current_user(request):
-            return render(
-                request,
-                "UserLogin.html",
-                add_message({}, "Please login to continue.", "warning"),
-            )
+            login_url = f"{reverse('UserLogin')}?{urlencode({'next': request.get_full_path()})}"
+            return redirect(login_url)
         return view_func(request, *args, **kwargs)
 
     return wrapped
@@ -557,8 +657,11 @@ def fit_state_model(train_frame, features, target_score):
 
 
 def aggregate_predictions(frame, name_column, team_column, score_column, stat_columns):
+    frame = frame.copy()
+    frame[score_column] = pd.to_numeric(frame[score_column], errors="coerce").fillna(0)
     aggregate_map = {score_column: "mean"}
     for column in stat_columns:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce").fillna(0)
         aggregate_map[column] = "mean"
     grouped = (
         frame.groupby([name_column, team_column], as_index=False)
@@ -567,7 +670,7 @@ def aggregate_predictions(frame, name_column, team_column, score_column, stat_co
         .reset_index(drop=True)
     )
     grouped["rank"] = grouped.index + 1
-    grouped["display_score"] = (grouped[score_column] * 100).round(1)
+    grouped["display_score"] = (grouped[score_column].clip(lower=0, upper=1) * 100).round(1)
     return grouped
 
 
@@ -582,7 +685,9 @@ def compute_batsman_predictions(limit=15, teams=None):
     if teams:
         filtered = candidate_frame[candidate_frame["team"].apply(lambda value: team_matches(value, teams))]
         if len(filtered["name_x"].unique()) >= 4:
-            candidate_frame = filtered
+            candidate_frame = filtered.reset_index(drop=True)
+    else:
+        candidate_frame = candidate_frame.reset_index(drop=True)
 
     base_score = (
         normalize_minmax(train_frame["runs_x"]) * 0.42
@@ -601,8 +706,10 @@ def compute_batsman_predictions(limit=15, teams=None):
         + candidate_frame["dismissal_score"] * 0.10
     )
     candidate_states = model.predict(scaler.transform(candidate_frame[BATTING_FEATURES]))
+    state_scores = pd.Series(candidate_states, index=candidate_frame.index).map(state_quality)
+    state_scores = state_scores.fillna(safe_float(candidate_base.mean()))
     candidate_frame["prediction_score"] = (
-        candidate_base * 0.72 + pd.Series(candidate_states).map(state_quality).fillna(candidate_base.mean()) * 0.28
+        candidate_base * 0.72 + state_scores * 0.28
     )
 
     predictions = aggregate_predictions(
@@ -617,10 +724,10 @@ def compute_batsman_predictions(limit=15, teams=None):
             "rank": int(row["rank"]),
             "name": row["name_x"],
             "team": row["team"],
-            "score": float(row["display_score"]),
+            "score": round(safe_float(row["display_score"]), 1),
             "metric_label": "Avg Runs",
-            "metric_value": f"{row['runs_x']:.1f}",
-            "detail": f"SR {row['strike_rate']:.1f} | Boundaries {(row['fours'] + row['sixes']):.1f}",
+            "metric_value": f"{safe_float(row['runs_x']):.1f}",
+            "detail": f"SR {safe_float(row['strike_rate']):.1f} | Boundaries {(safe_float(row['fours']) + safe_float(row['sixes'])):.1f}",
         }
         for _, row in predictions.iterrows()
     ]
@@ -637,7 +744,9 @@ def compute_bowler_predictions(limit=15, teams=None):
     if teams:
         filtered = candidate_frame[candidate_frame["team"].apply(lambda value: team_matches(value, teams))]
         if len(filtered["name_x"].unique()) >= 4:
-            candidate_frame = filtered
+            candidate_frame = filtered.reset_index(drop=True)
+    else:
+        candidate_frame = candidate_frame.reset_index(drop=True)
 
     base_score = (
         normalize_minmax(train_frame["wickets"]) * 0.38
@@ -658,8 +767,10 @@ def compute_bowler_predictions(limit=15, teams=None):
         + (1 - normalize_minmax(candidate_frame["wides"] + candidate_frame["no_balls"])) * 0.08
     )
     candidate_states = model.predict(scaler.transform(candidate_frame[BOWLING_FEATURES]))
+    state_scores = pd.Series(candidate_states, index=candidate_frame.index).map(state_quality)
+    state_scores = state_scores.fillna(safe_float(candidate_base.mean()))
     candidate_frame["prediction_score"] = (
-        candidate_base * 0.7 + pd.Series(candidate_states).map(state_quality).fillna(candidate_base.mean()) * 0.3
+        candidate_base * 0.7 + state_scores * 0.3
     )
 
     predictions = aggregate_predictions(
@@ -674,10 +785,10 @@ def compute_bowler_predictions(limit=15, teams=None):
             "rank": int(row["rank"]),
             "name": row["name_x"],
             "team": row["team"],
-            "score": float(row["display_score"]),
+            "score": round(safe_float(row["display_score"]), 1),
             "metric_label": "Avg Wickets",
-            "metric_value": f"{row['wickets']:.1f}",
-            "detail": f"Econ {row['economy']:.1f} | Dot Balls {row['zeros']:.1f}",
+            "metric_value": f"{safe_float(row['wickets']):.1f}",
+            "detail": f"Econ {safe_float(row['economy']):.1f} | Dot Balls {safe_float(row['zeros']):.1f}",
         }
         for _, row in predictions.iterrows()
     ]
@@ -926,10 +1037,14 @@ def fetch_next_match(force_refresh=False):
 
 
 def build_match_recommendations(teams):
-    batsmen = compute_batsman_predictions(limit=6, teams=teams)
-    bowlers = compute_bowler_predictions(limit=6, teams=teams)
+    batsmen = compute_batsman_predictions(limit=10, teams=teams)
+    bowlers = compute_bowler_predictions(limit=10, teams=teams)
+    if len(batsmen) < 10:
+        batsmen = top_up_players(batsmen, compute_batsman_predictions(limit=25), 10)
+    if len(bowlers) < 10:
+        bowlers = top_up_players(bowlers, compute_bowler_predictions(limit=25), 10)
     combined = []
-    for player in batsmen[:3]:
+    for player in batsmen[:5]:
         combined.append(
             {
                 "name": player["name"],
@@ -939,7 +1054,7 @@ def build_match_recommendations(teams):
                 "detail": player["detail"],
             }
         )
-    for player in bowlers[:3]:
+    for player in bowlers[:5]:
         combined.append(
             {
                 "name": player["name"],
@@ -960,8 +1075,14 @@ def index(request):
 
 def UserLogin(request):
     if current_user(request):
+        next_url = request.GET.get("next", "")
+        if is_safe_local_path(next_url):
+            return redirect(next_url)
         return redirect("Dashboard")
-    return render(request, "UserLogin.html", {})
+    context = {}
+    if request.GET.get("next"):
+        add_message(context, "Your session is not active. Login once and we will bring you back to that page.", "warning")
+    return render(request, "UserLogin.html", context)
 
 
 def Register(request):
@@ -1052,6 +1173,10 @@ def UserLoginAction(request):
     request.session["app_user_id"] = user.id
     request.session["app_username"] = user.username
     request.session["fixture_force_refresh"] = True
+    request.session.modified = True
+    next_url = request.POST.get("next", "").strip()
+    if is_safe_local_path(next_url):
+        return redirect(next_url)
     return redirect("Dashboard")
 
 
@@ -1067,7 +1192,7 @@ def Dashboard(request):
         {
             "user": user,
             "fixture": fixture,
-            "top_recommendations": match_recommendations[:3],
+            "top_recommendations": match_recommendations[:5],
             "force_refresh": force_refresh,
         },
     )
@@ -1125,8 +1250,8 @@ def NextMatchInsights(request):
         {
             "user": current_user(request),
             "fixture": fixture,
-            "top_recommendations": match_recommendations,
-            "recommended_batsmen": batsmen[:5],
-            "recommended_bowlers": bowlers[:5],
+            "top_recommendations": match_recommendations[:10],
+            "recommended_batsmen": batsmen[:10],
+            "recommended_bowlers": bowlers[:10],
         },
     )
