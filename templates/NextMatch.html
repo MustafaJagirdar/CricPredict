@@ -6,12 +6,12 @@
 <section class="match-layout">
     <div class="page-header">
         <div>
-            <span class="eyebrow">Upcoming Fixture Intelligence</span>
+            <span class="eyebrow">Upcoming IPL Fixture Intelligence</span>
             <h1>{{ fixture.name }}</h1>
             <p>{{ fixture.series }} | {{ fixture.match_type }} | {{ fixture.status }}</p>
         </div>
         <div class="action-row">
-            <a href="{% url 'NextMatchInsights' %}?refresh=1" class="button button-primary">Refresh Live Fixture</a>
+            <a href="{% url 'NextMatchInsights' %}?refresh=1" class="button button-primary">Refresh IPL Fixture</a>
             <a href="{% url 'Dashboard' %}" class="button button-secondary">Back to Dashboard</a>
         </div>
     </div>
@@ -20,7 +20,7 @@
         <article class="fixture-card surface">
             <div class="section-header">
                 <div>
-                    <span class="section-label">Fixture Details</span>
+                    <span class="section-label">IPL Fixture Details</span>
                     <h2>Match context</h2>
                 </div>
                 <span class="badge">{{ fixture.source }}</span>

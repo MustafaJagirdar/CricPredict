@@ -114,6 +114,149 @@ BOWLING_PROFILES = [
     {"name": "Mustafizur Rahman", "team": "Bangladesh", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 11},
 ]
 
+IPL_BATTING_PROFILES = [
+    {"name": "Virat Kohli", "team": "Royal Challengers Bengaluru", "runs": 74, "balls": 48, "strike_rate": 154, "fours": 7, "sixes": 3},
+    {"name": "Rajat Patidar", "team": "Royal Challengers Bengaluru", "runs": 48, "balls": 31, "strike_rate": 155, "fours": 4, "sixes": 3},
+    {"name": "Suryakumar Yadav", "team": "Mumbai Indians", "runs": 62, "balls": 34, "strike_rate": 182, "fours": 6, "sixes": 4},
+    {"name": "Rohit Sharma", "team": "Mumbai Indians", "runs": 55, "balls": 37, "strike_rate": 149, "fours": 6, "sixes": 3},
+    {"name": "Ruturaj Gaikwad", "team": "Chennai Super Kings", "runs": 59, "balls": 42, "strike_rate": 141, "fours": 6, "sixes": 2},
+    {"name": "Shivam Dube", "team": "Chennai Super Kings", "runs": 44, "balls": 25, "strike_rate": 176, "fours": 3, "sixes": 4},
+    {"name": "Shreyas Iyer", "team": "Kolkata Knight Riders", "runs": 52, "balls": 38, "strike_rate": 137, "fours": 5, "sixes": 2},
+    {"name": "Rinku Singh", "team": "Kolkata Knight Riders", "runs": 43, "balls": 24, "strike_rate": 179, "fours": 3, "sixes": 4},
+    {"name": "Travis Head", "team": "Sunrisers Hyderabad", "runs": 67, "balls": 36, "strike_rate": 186, "fours": 7, "sixes": 4},
+    {"name": "Abhishek Sharma", "team": "Sunrisers Hyderabad", "runs": 50, "balls": 28, "strike_rate": 178, "fours": 5, "sixes": 4},
+    {"name": "Sanju Samson", "team": "Rajasthan Royals", "runs": 56, "balls": 36, "strike_rate": 156, "fours": 5, "sixes": 3},
+    {"name": "Yashasvi Jaiswal", "team": "Rajasthan Royals", "runs": 61, "balls": 39, "strike_rate": 156, "fours": 7, "sixes": 3},
+    {"name": "Rishabh Pant", "team": "Delhi Capitals", "runs": 50, "balls": 31, "strike_rate": 161, "fours": 4, "sixes": 3},
+    {"name": "Jake Fraser-McGurk", "team": "Delhi Capitals", "runs": 47, "balls": 23, "strike_rate": 204, "fours": 5, "sixes": 4},
+    {"name": "Shubman Gill", "team": "Gujarat Titans", "runs": 65, "balls": 45, "strike_rate": 144, "fours": 7, "sixes": 2},
+    {"name": "Sai Sudharsan", "team": "Gujarat Titans", "runs": 54, "balls": 40, "strike_rate": 135, "fours": 5, "sixes": 2},
+    {"name": "KL Rahul", "team": "Lucknow Super Giants", "runs": 57, "balls": 43, "strike_rate": 133, "fours": 5, "sixes": 2},
+    {"name": "Nicholas Pooran", "team": "Lucknow Super Giants", "runs": 48, "balls": 25, "strike_rate": 192, "fours": 3, "sixes": 5},
+    {"name": "Shashank Singh", "team": "Punjab Kings", "runs": 46, "balls": 27, "strike_rate": 170, "fours": 4, "sixes": 3},
+    {"name": "Prabhsimran Singh", "team": "Punjab Kings", "runs": 44, "balls": 28, "strike_rate": 157, "fours": 5, "sixes": 2},
+]
+
+IPL_BOWLING_PROFILES = [
+    {"name": "Jasprit Bumrah", "team": "Mumbai Indians", "run_conceded": 27, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.7, "wides": 1, "no_balls": 0, "zeros": 13},
+    {"name": "Piyush Chawla", "team": "Mumbai Indians", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+    {"name": "Mohammed Siraj", "team": "Royal Challengers Bengaluru", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 2, "no_balls": 0, "zeros": 10},
+    {"name": "Yash Dayal", "team": "Royal Challengers Bengaluru", "run_conceded": 32, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 8.0, "wides": 1, "no_balls": 0, "zeros": 9},
+    {"name": "Ravindra Jadeja", "team": "Chennai Super Kings", "run_conceded": 25, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.2, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Matheesha Pathirana", "team": "Chennai Super Kings", "run_conceded": 30, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.5, "wides": 2, "no_balls": 0, "zeros": 11},
+    {"name": "Sunil Narine", "team": "Kolkata Knight Riders", "run_conceded": 24, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.0, "wides": 0, "no_balls": 0, "zeros": 13},
+    {"name": "Varun Chakravarthy", "team": "Kolkata Knight Riders", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Pat Cummins", "team": "Sunrisers Hyderabad", "run_conceded": 29, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 11},
+    {"name": "T Natarajan", "team": "Sunrisers Hyderabad", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 1, "no_balls": 0, "zeros": 10},
+    {"name": "Yuzvendra Chahal", "team": "Rajasthan Royals", "run_conceded": 28, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.0, "wides": 0, "no_balls": 0, "zeros": 11},
+    {"name": "Trent Boult", "team": "Rajasthan Royals", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 1, "no_balls": 0, "zeros": 12},
+    {"name": "Kuldeep Yadav", "team": "Delhi Capitals", "run_conceded": 26, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.5, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Axar Patel", "team": "Delhi Capitals", "run_conceded": 25, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.2, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Rashid Khan", "team": "Gujarat Titans", "run_conceded": 24, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 6.0, "wides": 0, "no_balls": 0, "zeros": 13},
+    {"name": "Mohit Sharma", "team": "Gujarat Titans", "run_conceded": 30, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 10},
+    {"name": "Ravi Bishnoi", "team": "Lucknow Super Giants", "run_conceded": 27, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 6.7, "wides": 0, "no_balls": 0, "zeros": 12},
+    {"name": "Mayank Yadav", "team": "Lucknow Super Giants", "run_conceded": 31, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.7, "wides": 2, "no_balls": 0, "zeros": 10},
+    {"name": "Arshdeep Singh", "team": "Punjab Kings", "run_conceded": 30, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.5, "wides": 1, "no_balls": 0, "zeros": 11},
+    {"name": "Kagiso Rabada", "team": "Punjab Kings", "run_conceded": 29, "maidens": 0, "wickets": 3, "overs": 4.0, "economy": 7.2, "wides": 1, "no_balls": 0, "zeros": 11},
+]
+
+BATTING_PROFILES.extend(IPL_BATTING_PROFILES)
+BOWLING_PROFILES.extend(IPL_BOWLING_PROFILES)
+
+IPL_STATIC_FIXTURES = [
+    {
+        "date": "2026-04-08",
+        "time": "19:30",
+        "name": "Delhi Capitals vs Gujarat Titans",
+        "teams": ["Delhi Capitals", "Gujarat Titans"],
+        "venue": "Arun Jaitley Stadium, Delhi",
+    },
+    {
+        "date": "2026-04-09",
+        "time": "19:30",
+        "name": "Kolkata Knight Riders vs Lucknow Super Giants",
+        "teams": ["Kolkata Knight Riders", "Lucknow Super Giants"],
+        "venue": "Eden Gardens, Kolkata",
+    },
+    {
+        "date": "2026-04-10",
+        "time": "19:30",
+        "name": "Rajasthan Royals vs Royal Challengers Bengaluru",
+        "teams": ["Rajasthan Royals", "Royal Challengers Bengaluru"],
+        "venue": "Barsapara Cricket Stadium, Guwahati",
+    },
+    {
+        "date": "2026-04-11",
+        "time": "15:30",
+        "name": "Punjab Kings vs Sunrisers Hyderabad",
+        "teams": ["Punjab Kings", "Sunrisers Hyderabad"],
+        "venue": "Maharaja Yadavindra Singh International Cricket Stadium, New Chandigarh",
+    },
+    {
+        "date": "2026-04-11",
+        "time": "19:30",
+        "name": "Chennai Super Kings vs Delhi Capitals",
+        "teams": ["Chennai Super Kings", "Delhi Capitals"],
+        "venue": "MA Chidambaram Stadium, Chennai",
+    },
+    {
+        "date": "2026-04-12",
+        "time": "15:30",
+        "name": "Lucknow Super Giants vs Gujarat Titans",
+        "teams": ["Lucknow Super Giants", "Gujarat Titans"],
+        "venue": "Ekana Cricket Stadium, Lucknow",
+    },
+    {
+        "date": "2026-04-12",
+        "time": "19:30",
+        "name": "Mumbai Indians vs Royal Challengers Bengaluru",
+        "teams": ["Mumbai Indians", "Royal Challengers Bengaluru"],
+        "venue": "Wankhede Stadium, Mumbai",
+    },
+    {
+        "date": "2026-04-13",
+        "time": "19:30",
+        "name": "Sunrisers Hyderabad vs Rajasthan Royals",
+        "teams": ["Sunrisers Hyderabad", "Rajasthan Royals"],
+        "venue": "Rajiv Gandhi International Stadium, Hyderabad",
+    },
+    {
+        "date": "2026-04-14",
+        "time": "19:30",
+        "name": "Chennai Super Kings vs Kolkata Knight Riders",
+        "teams": ["Chennai Super Kings", "Kolkata Knight Riders"],
+        "venue": "MA Chidambaram Stadium, Chennai",
+    },
+    {
+        "date": "2026-04-15",
+        "time": "19:30",
+        "name": "Royal Challengers Bengaluru vs Lucknow Super Giants",
+        "teams": ["Royal Challengers Bengaluru", "Lucknow Super Giants"],
+        "venue": "M Chinnaswamy Stadium, Bengaluru",
+    },
+    {
+        "date": "2026-04-16",
+        "time": "19:30",
+        "name": "Mumbai Indians vs Punjab Kings",
+        "teams": ["Mumbai Indians", "Punjab Kings"],
+        "venue": "Wankhede Stadium, Mumbai",
+    },
+    {
+        "date": "2026-04-17",
+        "time": "19:30",
+        "name": "Gujarat Titans vs Kolkata Knight Riders",
+        "teams": ["Gujarat Titans", "Kolkata Knight Riders"],
+        "venue": "Narendra Modi Stadium, Ahmedabad",
+    },
+    {
+        "date": "2026-04-18",
+        "time": "15:30",
+        "name": "Royal Challengers Bengaluru vs Delhi Capitals",
+        "teams": ["Royal Challengers Bengaluru", "Delhi Capitals"],
+        "venue": "M Chinnaswamy Stadium, Bengaluru",
+    },
+]
+
 FALLBACK_FIXTURES = [
     {
         "name": "India vs Australia",
@@ -287,6 +430,19 @@ def enrich_batting_frame(frame, minimum_players=20, samples=6):
     if synthetic_rows:
         frame = pd.concat([frame, pd.DataFrame(synthetic_rows)], ignore_index=True)
 
+    existing_pairs = set(
+        zip(
+            frame["name_x"].fillna("").astype(str),
+            frame["team"].fillna("").astype(str),
+        )
+    )
+    ipl_rows = []
+    for profile in IPL_BATTING_PROFILES:
+        if (profile["name"], profile["team"]) not in existing_pairs:
+            ipl_rows.extend(build_batsman_rows(profile, samples=samples))
+    if ipl_rows:
+        frame = pd.concat([frame, pd.DataFrame(ipl_rows)], ignore_index=True)
+
     frame["name_x"] = frame["name_x"].astype(str)
     frame["team"] = frame["team"].fillna("International")
     frame["how_out"] = frame["how_out"].fillna("caught").astype(str)
@@ -331,6 +487,19 @@ def enrich_bowling_frame(frame, minimum_players=20, samples=6):
 
     if synthetic_rows:
         frame = pd.concat([frame, pd.DataFrame(synthetic_rows)], ignore_index=True)
+
+    existing_pairs = set(
+        zip(
+            frame["name_x"].fillna("").astype(str),
+            frame["team"].fillna("").astype(str),
+        )
+    )
+    ipl_rows = []
+    for profile in IPL_BOWLING_PROFILES:
+        if (profile["name"], profile["team"]) not in existing_pairs:
+            ipl_rows.extend(build_bowler_rows(profile, samples=samples))
+    if ipl_rows:
+        frame = pd.concat([frame, pd.DataFrame(ipl_rows)], ignore_index=True)
 
     numeric_columns = [
         "run_conceded",
@@ -539,21 +708,46 @@ def format_fixture_datetime(start_dt):
 
 
 def build_fallback_fixture(reason):
-    now = datetime.utcnow()
-    fixture_date = now + timedelta(days=1)
-    fixture_date = fixture_date.replace(hour=14, minute=0, second=0, microsecond=0)
-    fallback = FALLBACK_FIXTURES[now.toordinal() % len(FALLBACK_FIXTURES)].copy()
+    now_utc = datetime.utcnow()
+    now_ist = now_utc + timedelta(hours=5, minutes=30)
+    next_ipl_fixture = None
+    next_ipl_datetime = None
+    for fixture in IPL_STATIC_FIXTURES:
+        fixture_datetime = datetime.strptime(f"{fixture['date']} {fixture['time']}", "%Y-%m-%d %H:%M")
+        if fixture_datetime >= now_ist - timedelta(hours=2):
+            next_ipl_fixture = fixture
+            next_ipl_datetime = fixture_datetime
+            break
+
+    if next_ipl_fixture:
+        fallback = {
+            "name": next_ipl_fixture["name"],
+            "match_type": "IPL T20",
+            "series": "Indian Premier League",
+            "venue": next_ipl_fixture["venue"],
+            "teams": next_ipl_fixture["teams"],
+        }
+        fixture_date = next_ipl_datetime
+        start_time = fixture_date.strftime("%d %b %Y, %I:%M %p IST")
+    else:
+        fixture_date = now_ist + timedelta(days=1)
+        fixture_date = fixture_date.replace(hour=19, minute=30, second=0, microsecond=0)
+        fallback = FALLBACK_FIXTURES[now_ist.toordinal() % len(FALLBACK_FIXTURES)].copy()
+        fallback["series"] = "IPL Focus Demo Schedule"
+        fallback["match_type"] = "IPL T20"
+        start_time = fixture_date.strftime("%d %b %Y, %I:%M %p IST")
+
     fallback.update(
         {
             "id": f"fallback-{fixture_date.strftime('%Y%m%d')}",
             "status": "Upcoming",
-            "start_time": format_fixture_datetime(fixture_date),
+            "start_time": start_time,
             "sort_time": fixture_date.isoformat(),
-            "source": "Auto-updating fallback schedule",
+            "source": "IPL auto-updating fallback schedule",
             "source_url": "https://api.cricapi.com/",
             "note": reason,
             "is_fallback": True,
-            "last_updated": datetime.utcnow().strftime("%d %b %Y, %I:%M %p UTC"),
+            "last_updated": now_ist.strftime("%d %b %Y, %I:%M %p IST"),
         }
     )
     return fallback
@@ -647,6 +841,29 @@ def is_completed_match(status_text):
     return any(word in status_text for word in completed_words)
 
 
+def is_ipl_match(fixture):
+    searchable = " ".join(
+        str(fixture.get(key, ""))
+        for key in ["name", "series", "match_type", "status"]
+    ).lower()
+    teams = " ".join(fixture.get("teams", [])).lower()
+    ipl_terms = [
+        "ipl",
+        "indian premier league",
+        "royal challengers",
+        "mumbai indians",
+        "chennai super kings",
+        "kolkata knight riders",
+        "sunrisers hyderabad",
+        "rajasthan royals",
+        "delhi capitals",
+        "gujarat titans",
+        "lucknow super giants",
+        "punjab kings",
+    ]
+    return any(term in searchable or term in teams for term in ipl_terms)
+
+
 def fetch_next_match(force_refresh=False):
     cache_key = "cricpredict_next_match"
     if not force_refresh:
@@ -657,7 +874,7 @@ def fetch_next_match(force_refresh=False):
     api_key = os.getenv("CRICKETDATA_API_KEY", "").strip()
     if not api_key:
         fixture = build_fallback_fixture(
-            "Live cricket API key is not configured. Add CRICKETDATA_API_KEY on Render to fetch real upcoming matches. This fallback date updates automatically so the dashboard never shows an old fixture."
+            "Live cricket API key is not configured. IPL-focused fallback is active and automatically picks the next available IPL fixture from the local schedule."
         )
         cache.set(cache_key, fixture, 60 * 10)
         return fixture
@@ -665,7 +882,7 @@ def fetch_next_match(force_refresh=False):
     matches, errors = fetch_api_matches(api_key)
     if not matches:
         fixture = build_fallback_fixture(
-            "Live cricket API lookup failed or returned no matches. The backend refreshed and switched to the dynamic fallback fixture."
+            "Live cricket API lookup failed or returned no matches. The backend refreshed and switched to the IPL-focused dynamic fallback fixture."
         )
         cache.set(cache_key, fixture, 60 * 10)
         return fixture
@@ -689,16 +906,19 @@ def fetch_next_match(force_refresh=False):
 
     if not upcoming:
         fixture = build_fallback_fixture(
-            "The API refreshed successfully but did not return a future fixture. Dynamic fallback is being used until a new API fixture is available."
+            "The API refreshed successfully but did not return a future IPL fixture. IPL-focused fallback is being used until a new API fixture is available."
         )
         cache.set(cache_key, fixture, 60 * 10)
         return fixture
 
+    ipl_upcoming = [item for item in upcoming if is_ipl_match(item[1])]
+    if ipl_upcoming:
+        upcoming = ipl_upcoming
     upcoming.sort(key=lambda item: item[0])
     fixture = upcoming[0][1]
     fixture["source"] = "CricketData API"
     fixture["source_url"] = "https://api.cricapi.com/"
-    fixture["note"] = "Fresh upcoming fixture fetched from the configured API. The dashboard refreshes this on login and caches it briefly to avoid unnecessary API calls."
+    fixture["note"] = "Fresh upcoming IPL fixture fetched from the configured API. The dashboard refreshes this on login and caches it briefly to avoid unnecessary API calls."
     fixture["is_fallback"] = False
     fixture["last_updated"] = datetime.utcnow().strftime("%d %b %Y, %I:%M %p UTC")
     cache.set(cache_key, fixture, 60 * 15)

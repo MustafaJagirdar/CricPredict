@@ -7,7 +7,7 @@
     <div>
         <span class="eyebrow">Control Center</span>
         <h1>Welcome {{ user.username }}.</h1>
-        <p>You are logged in as {{ user.usertype|default:"User" }} and can now access predictions, rankings, and upcoming match intelligence.</p>
+        <p>You are logged in as {{ user.usertype|default:"User" }}. CricPredict now focuses on IPL-first match intelligence and refreshes the upcoming fixture whenever you login.</p>
     </div>
     <div class="action-row">
         <a href="{% url 'NextMatchInsights' %}" class="button button-primary">Open Next Match Insights</a>
@@ -34,7 +34,7 @@
         </div>
     </article>
     <article class="metric-card surface">
-        <span class="section-label">Upcoming Fixture</span>
+        <span class="section-label">Upcoming IPL Fixture</span>
         <h3>{{ fixture.name }}</h3>
         <p>{{ fixture.start_time }} | {{ fixture.venue }}</p>
         <div class="action-row">
@@ -47,7 +47,7 @@
     <article class="fixture-card surface">
         <div class="section-header">
             <div>
-                <span class="section-label">Next Match Snapshot</span>
+                <span class="section-label">Next IPL Match Snapshot</span>
                 <h2>{{ fixture.name }}</h2>
             </div>
             <span class="badge">{{ fixture.match_type }}</span>
@@ -66,7 +66,7 @@
                 <p>{{ fixture.venue }}</p>
             </div>
             <div class="summary-item">
-                <strong>Source</strong>
+                <strong>Fixture Source</strong>
                 <p>{{ fixture.source }}</p>
                 <p class="detail-text">{{ fixture.note }}</p>
             </div>
