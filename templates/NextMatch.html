@@ -11,6 +11,7 @@
             <p>{{ fixture.series }} | {{ fixture.match_type }} | {{ fixture.status }}</p>
         </div>
         <div class="action-row">
+            <a href="{% url 'NextMatchInsights' %}?refresh=1" class="button button-primary">Refresh Live Fixture</a>
             <a href="{% url 'Dashboard' %}" class="button button-secondary">Back to Dashboard</a>
         </div>
     </div>
@@ -44,6 +45,7 @@
                 <div class="summary-item">
                     <strong>API Status</strong>
                     <p>{{ fixture.note }}</p>
+                    <p class="detail-text">Last refreshed: {{ fixture.last_updated|default:"Just now" }}</p>
                     <p class="detail-text">
                         {% if fixture.source_url %}
                         Source endpoint: <a href="{{ fixture.source_url }}" class="subtle-link">{{ fixture.source_url }}</a>
@@ -122,4 +124,11 @@
         </article>
     </section>
 </section>
+<script>
+    setTimeout(function () {
+        const url = new URL(window.location.href);
+        url.searchParams.set("refresh", "1");
+        window.location.href = url.toString();
+    }, 15 * 60 * 1000);
+</script>
 {% endblock %}

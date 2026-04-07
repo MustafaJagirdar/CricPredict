@@ -11,6 +11,7 @@
     </div>
     <div class="action-row">
         <a href="{% url 'NextMatchInsights' %}" class="button button-primary">Open Next Match Insights</a>
+        <a href="{% url 'Dashboard' %}?refresh=1" class="button button-tertiary">Refresh Fixture</a>
         <a href="{% url 'Logout' %}" class="button button-secondary">Logout</a>
     </div>
 </section>
@@ -69,6 +70,15 @@
                 <p>{{ fixture.source }}</p>
                 <p class="detail-text">{{ fixture.note }}</p>
             </div>
+            <div class="summary-item">
+                <strong>Last Refreshed</strong>
+                <p>{{ fixture.last_updated|default:"Just now" }}</p>
+                {% if fixture.is_fallback %}
+                <p class="detail-text">Fallback mode is active. Add an API key on Render for real upcoming fixtures.</p>
+                {% else %}
+                <p class="detail-text">Live API mode is active.</p>
+                {% endif %}
+            </div>
         </div>
     </article>
 
@@ -96,4 +106,11 @@
         </div>
     </article>
 </section>
+<script>
+    setTimeout(function () {
+        const url = new URL(window.location.href);
+        url.searchParams.set("refresh", "1");
+        window.location.href = url.toString();
+    }, 15 * 60 * 1000);
+</script>
 {% endblock %}

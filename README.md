@@ -21,11 +21,13 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ## Optional API
 
-To fetch a live upcoming fixture instead of using the built-in fallback, set:
+To fetch a live upcoming fixture instead of using the built-in auto-updating fallback, set:
 
 ```bash
 export CRICKETDATA_API_KEY=your_api_key
 ```
+
+The dashboard forces a fixture refresh after every successful login. You can also refresh manually from the dashboard or next-match page.
 
 ## GitHub Upload
 

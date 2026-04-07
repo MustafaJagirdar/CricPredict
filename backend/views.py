@@ -1,7 +1,7 @@
 import hashlib
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -9,6 +9,7 @@ from urllib.request import urlopen
 import numpy as np
 import pandas as pd
 from django.contrib.auth.hashers import check_password, make_password
+from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
@@ -113,19 +114,29 @@ BOWLING_PROFILES = [
     {"name": "Mustafizur Rahman", "team": "Bangladesh", "run_conceded": 28, "maidens": 0, "wickets": 2, "overs": 4.0, "economy": 7.0, "wides": 1, "no_balls": 0, "zeros": 11},
 ]
 
-NEXT_MATCH_FALLBACK = {
-    "id": "fallback-fixture",
-    "name": "India vs Australia",
-    "match_type": "ODI",
-    "series": "Champions Showcase",
-    "status": "Upcoming",
-    "venue": "Wankhede Stadium, Mumbai",
-    "start_time": "18 Mar 2026, 7:00 PM IST",
-    "teams": ["India", "Australia"],
-    "source": "Built-in schedule fallback",
-    "source_url": "https://cricketdata.org/",
-    "note": "Add CRICKETDATA_API_KEY to fetch live upcoming fixtures automatically.",
-}
+FALLBACK_FIXTURES = [
+    {
+        "name": "India vs Australia",
+        "match_type": "ODI",
+        "series": "CricPredict Demo Series",
+        "venue": "Wankhede Stadium, Mumbai",
+        "teams": ["India", "Australia"],
+    },
+    {
+        "name": "England vs Pakistan",
+        "match_type": "T20",
+        "series": "CricPredict Demo Series",
+        "venue": "Lord's Cricket Ground, London",
+        "teams": ["England", "Pakistan"],
+    },
+    {
+        "name": "South Africa vs New Zealand",
+        "match_type": "ODI",
+        "series": "CricPredict Demo Series",
+        "venue": "Newlands Cricket Ground, Cape Town",
+        "teams": ["South Africa", "New Zealand"],
+    },
+]
 
 
 def stable_seed(label):
@@ -521,6 +532,33 @@ def parse_fixture_datetime(raw_value):
     return None
 
 
+def format_fixture_datetime(start_dt):
+    if not start_dt:
+        return "Schedule pending"
+    return start_dt.strftime("%d %b %Y, %I:%M %p UTC")
+
+
+def build_fallback_fixture(reason):
+    now = datetime.utcnow()
+    fixture_date = now + timedelta(days=1)
+    fixture_date = fixture_date.replace(hour=14, minute=0, second=0, microsecond=0)
+    fallback = FALLBACK_FIXTURES[now.toordinal() % len(FALLBACK_FIXTURES)].copy()
+    fallback.update(
+        {
+            "id": f"fallback-{fixture_date.strftime('%Y%m%d')}",
+            "status": "Upcoming",
+            "start_time": format_fixture_datetime(fixture_date),
+            "sort_time": fixture_date.isoformat(),
+            "source": "Auto-updating fallback schedule",
+            "source_url": "https://api.cricapi.com/",
+            "note": reason,
+            "is_fallback": True,
+            "last_updated": datetime.utcnow().strftime("%d %b %Y, %I:%M %p UTC"),
+        }
+    )
+    return fallback
+
+
 def extract_match_teams(match):
     if isinstance(match.get("teams"), list) and match["teams"]:
         return [str(team) for team in match["teams"][:2]]
@@ -557,54 +595,113 @@ def normalize_fixture(match):
         "series": str(match.get("series") or match.get("series_name") or "Featured Fixture"),
         "status": str(match.get("status") or match.get("ms") or "Upcoming"),
         "venue": str(match.get("venue") or match.get("location") or "Venue to be announced"),
-        "start_time": start_dt.strftime("%d %b %Y, %I:%M %p UTC") if start_dt else "Schedule pending",
+        "start_time": format_fixture_datetime(start_dt),
+        "sort_time": start_dt.isoformat() if start_dt else "",
         "teams": teams,
     }
 
 
-def fetch_next_match():
+def cricket_api_endpoints(api_key):
+    query = urlencode({"apikey": api_key, "offset": 0})
+    return [
+        f"https://api.cricapi.com/v1/matches?{query}",
+        f"https://api.cricapi.com/v1/cricScore?{urlencode({'apikey': api_key})}",
+        f"https://api.cricapi.com/v1/currentMatches?{query}",
+    ]
+
+
+def fetch_api_matches(api_key):
+    matches = []
+    errors = []
+    for url in cricket_api_endpoints(api_key):
+        try:
+            with urlopen(url, timeout=8) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            errors.append(f"{url}: {exc}")
+            continue
+
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if isinstance(data, list):
+            matches.extend(data)
+        elif isinstance(data, dict):
+            for value in data.values():
+                if isinstance(value, list):
+                    matches.extend(value)
+    return matches, errors
+
+
+def is_completed_match(status_text):
+    status_text = status_text.lower()
+    completed_words = [
+        "result",
+        "won",
+        "draw",
+        "stumps",
+        "complete",
+        "completed",
+        "finished",
+        "abandoned",
+        "cancelled",
+    ]
+    return any(word in status_text for word in completed_words)
+
+
+def fetch_next_match(force_refresh=False):
+    cache_key = "cricpredict_next_match"
+    if not force_refresh:
+        cached_fixture = cache.get(cache_key)
+        if cached_fixture:
+            return cached_fixture
+
     api_key = os.getenv("CRICKETDATA_API_KEY", "").strip()
     if not api_key:
-        return NEXT_MATCH_FALLBACK
-
-    query = urlencode({"apikey": api_key})
-    url = f"https://api.cricapi.com/v1/cricScore?{query}"
-    try:
-        with urlopen(url, timeout=8) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
-        fixture = NEXT_MATCH_FALLBACK.copy()
-        fixture["note"] = "Live API lookup failed, so a local fallback fixture is being used."
+        fixture = build_fallback_fixture(
+            "Live cricket API key is not configured. Add CRICKETDATA_API_KEY on Render to fetch real upcoming matches. This fallback date updates automatically so the dashboard never shows an old fixture."
+        )
+        cache.set(cache_key, fixture, 60 * 10)
         return fixture
 
-    matches = payload.get("data") if isinstance(payload, dict) else None
-    if not isinstance(matches, list) or not matches:
-        fixture = NEXT_MATCH_FALLBACK.copy()
-        fixture["note"] = "The API did not return a usable upcoming fixture, so a local fallback fixture is being used."
+    matches, errors = fetch_api_matches(api_key)
+    if not matches:
+        fixture = build_fallback_fixture(
+            "Live cricket API lookup failed or returned no matches. The backend refreshed and switched to the dynamic fallback fixture."
+        )
+        cache.set(cache_key, fixture, 60 * 10)
         return fixture
 
     upcoming = []
+    now = datetime.utcnow()
     for item in matches:
         normalized = normalize_fixture(item)
         if len(normalized["teams"]) < 2:
             continue
         status_text = normalized["status"].lower()
-        if any(word in status_text for word in ["live", "result", "won", "draw", "stumps", "complete"]):
+        if is_completed_match(status_text):
             continue
         start_dt = parse_fixture_datetime(item.get("dateTimeGMT")) or parse_fixture_datetime(item.get("date"))
+        if start_dt and start_dt < now - timedelta(hours=2):
+            continue
+        if not start_dt and "upcoming" not in status_text and "not started" not in status_text and "fixture" not in status_text:
+            continue
         sort_key = start_dt or datetime.max
         upcoming.append((sort_key, normalized))
 
     if not upcoming:
-        fixture = NEXT_MATCH_FALLBACK.copy()
-        fixture["note"] = "No future fixture was available from the API response, so a local fallback fixture is being used."
+        fixture = build_fallback_fixture(
+            "The API refreshed successfully but did not return a future fixture. Dynamic fallback is being used until a new API fixture is available."
+        )
+        cache.set(cache_key, fixture, 60 * 10)
         return fixture
 
     upcoming.sort(key=lambda item: item[0])
     fixture = upcoming[0][1]
     fixture["source"] = "CricketData API"
-    fixture["source_url"] = "https://api.cricapi.com/v1/cricScore"
-    fixture["note"] = "Upcoming fixture fetched from the configured CricketData API key."
+    fixture["source_url"] = "https://api.cricapi.com/"
+    fixture["note"] = "Fresh upcoming fixture fetched from the configured API. The dashboard refreshes this on login and caches it briefly to avoid unnecessary API calls."
+    fixture["is_fallback"] = False
+    fixture["last_updated"] = datetime.utcnow().strftime("%d %b %Y, %I:%M %p UTC")
+    cache.set(cache_key, fixture, 60 * 15)
     return fixture
 
 
@@ -734,13 +831,15 @@ def UserLoginAction(request):
 
     request.session["app_user_id"] = user.id
     request.session["app_username"] = user.username
+    request.session["fixture_force_refresh"] = True
     return redirect("Dashboard")
 
 
 @require_login
 def Dashboard(request):
     user = current_user(request)
-    fixture = fetch_next_match()
+    force_refresh = bool(request.session.pop("fixture_force_refresh", False)) or request.GET.get("refresh") == "1"
+    fixture = fetch_next_match(force_refresh=force_refresh)
     match_recommendations, _, _ = build_match_recommendations(fixture["teams"])
     return render(
         request,
@@ -749,6 +848,7 @@ def Dashboard(request):
             "user": user,
             "fixture": fixture,
             "top_recommendations": match_recommendations[:3],
+            "force_refresh": force_refresh,
         },
     )
 
@@ -797,7 +897,7 @@ def Ballers(request):
 
 @require_login
 def NextMatchInsights(request):
-    fixture = fetch_next_match()
+    fixture = fetch_next_match(force_refresh=request.GET.get("refresh") == "1")
     match_recommendations, batsmen, bowlers = build_match_recommendations(fixture["teams"])
     return render(
         request,
